@@ -42,7 +42,7 @@ dataframe = read_excel(file_handle)
 data = dataframe.values
 
 """
-Only use the first 100 users
+Only use the first 100 users for this example.
 """
 user_indices = data[:100, 0]
 ratings = data[:100, 1:]
@@ -72,6 +72,7 @@ ratings = sparse.coo_matrix((ratings[rated[0], rated[1]], (rated[0], rated[1])))
 """
 For now, treat this algorithm as a black box with input ratings,
 output recommendation basis matrices which can be used for predictions.
+If curious, see the docstrings of the function for the original paper.
 """
 U, V, m = PMF(ratings, minibatch_size=10, learning_rate=0.001, momentum=0.95,
               regularization=0.75, max_epoch=100, rank=20, random_state=2000)
@@ -96,5 +97,6 @@ axarr[0].matshow((true_ratings * mask), cmap="gray")
 axarr[0].set_title("Ground truth ratings")
 axarr[1].matshow((predicted_ratings * mask), cmap="gray")
 axarr[1].set_title("Predicted ratings\n Validation mean absolute error %f" % mae)
-plt.axis("off")
+axarr[0].axis("off")
+axarr[1].axis("off")
 plt.show()
