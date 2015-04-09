@@ -2,11 +2,10 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics import classification_report
 from sklearn.metrics import accuracy_score
 from sklearn.pipeline import make_pipeline
-from sklearn.naive_bayes import MultinomialNB
+from sklearn.naive_bayes import BernoulliNB
 from utils import download
 import numpy as np
 import zipfile
-import copy
 import os
 
 """
@@ -59,7 +58,7 @@ test_y = np.array(labels[train_boundary:])
 Using sklearn's pipelines, this becomes easy
 """
 text_cleaner = TfidfVectorizer()
-classifier = MultinomialNB()
+classifier = BernoulliNB()
 p = make_pipeline(text_cleaner, classifier)
 p.fit(train_X, train_y)
 
