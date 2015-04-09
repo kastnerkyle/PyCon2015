@@ -2,10 +2,11 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics import classification_report
 from sklearn.metrics import accuracy_score
 from sklearn.pipeline import make_pipeline
-from sklearn.naive_bayes import BernoulliNB
+from sklearn.naive_bayes import MultinomialNB
 from utils import download
 import numpy as np
 import zipfile
+import copy
 import os
 
 """
@@ -30,7 +31,6 @@ Get all the data out of the zipfile into a list, so we can start processing.
 """
 archive = zipfile.ZipFile(dataset_fname, 'r')
 raw = archive.open(archive.infolist()[0]).readlines()
-# 0 for ham, 1 for spam
 labels = [l.split("\t")[0] for l in raw]
 data = [l.split("\t")[1].rstrip() for l in raw]
 
@@ -40,11 +40,11 @@ Let's see some examples from the dataset
 for l, d in zip(labels, data)[:10]:
     print("%s %s" % (l, d))
 
-"""
-Convert text labels to 0, 1
-"""
-labels[labels == "ham"] = 0
-labels[labels == "spam"] = 1
+labels = np.array(labels)
+n_spam = np.sum(labels == "spam")
+n_ham = np.sum(labels == "ham")
+print("Percentage spam %f" % (float(n_spam) / len(labels)))
+print("Percentage ham %f" % (float(n_ham) / len(labels)))
 
 """
 Want to train on 80% of the data, use last 20% for validation
@@ -59,12 +59,12 @@ test_y = np.array(labels[train_boundary:])
 Using sklearn's pipelines, this becomes easy
 """
 text_cleaner = TfidfVectorizer()
-classifier = BernoulliNB()
+classifier = MultinomialNB()
 p = make_pipeline(text_cleaner, classifier)
 p.fit(train_X, train_y)
 
 """
-Let's see how it is doing on the training and test sets
+See how it is doing on the training and test sets
 """
 pred_train_y = p.predict(train_X)
 pred_test_y = p.predict(test_X)
@@ -74,3 +74,14 @@ print(" ")
 print("Test classification report")
 print("==========================")
 print(classification_report(test_y, pred_test_y))
+
+"""
+Now print a few test set misses
+"""
+misses = np.where(pred_test_y != test_y)[0]
+for n in misses:
+    i = n + train_boundary
+    lt = labels[i]
+    lp = pred_test_y[n]
+    d = data[i]
+    print("true:%s predicted:%s %s" % (lt, lp, d))
