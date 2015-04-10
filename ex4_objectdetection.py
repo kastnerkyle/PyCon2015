@@ -4,7 +4,8 @@ import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
 from matplotlib.patches import Rectangle
 from sklearn_theano.feature_extraction import OverfeatLocalizer
-from sklearn_theano.feature_extraction import OverfeatTransformer
+from sklearn_theano.datasets import load_sample_image
+from sklearn.mixture import GMM
 
 """
 pip install git+https://github.com/sklearn-theano/sklearn-theano
@@ -66,4 +67,40 @@ axarr[1, 1].autoscale(enable=False)
 axarr[1, 1].scatter(sloth_points[:, 0], sloth_points[:, 1], color='orange',
                     s=50)
 print("Localization complete!")
+
+
+def convert_gmm_to_box(gmm, color, alpha):
+    midpoint = gmm.means_
+    std = 3 * np.sqrt(clf.covars_)
+    width = std[:, 0]
+    height = std[:, 1]
+    upper_left_point = (midpoint[:, 0] - width // 2,
+                        midpoint[:, 1] - height // 2)
+    return Rectangle(upper_left_point, width, height, ec=color,
+                     fc=color, alpha=alpha)
+
+X = load_sample_image("cat_and_dog.jpg")
+dog_label = 'dog.n.01'
+cat_label = 'cat.n.01'
+print("Starting localization")
+clf = OverfeatLocalizer(top_n=1,
+                        match_strings=[dog_label, cat_label])
+points = clf.predict(X)
+print("Localization complete!")
+dog_points = points[0]
+cat_points = points[1]
+
+plt.figure()
+plt.imshow(X)
+ax = plt.gca()
+ax.autoscale(enable=False)
+clf = GMM()
+clf.fit(dog_points)
+dog_box = convert_gmm_to_box(clf, "darkred", .6)
+clf.fit(cat_points)
+cat_box = convert_gmm_to_box(clf, "steelblue", .6)
+ax.add_patch(dog_box)
+ax.add_patch(cat_box)
+ax.get_xaxis().set_ticks([])
+ax.get_yaxis().set_ticks([])
 plt.show()
